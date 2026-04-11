@@ -83,6 +83,10 @@ namespace CraftSharp
         /// </summary>
         ChickenVariant, // Added in 1.21.5
         /// <summary>
+        /// VarInt
+        /// </summary>
+        ZombieNautilusVariant, // Added in 1.21.11
+        /// <summary>
         /// String + Position
         /// </summary>
         GlobalPosition,
@@ -121,6 +125,10 @@ namespace CraftSharp
         /// <summary>
         /// Complex. See https://minecraft.wiki/w/Java_Edition_protocol/Entity_metadata#Resolvable_Profile
         /// </summary>
-        ResolvableProfile // Added in 1.21.9
+        ResolvableProfile, // Added in 1.21.9
+        /// <summary>
+        /// VarInt
+        /// </summary>
+        HumanoidArm // Added in 1.21.11
     }
 }
