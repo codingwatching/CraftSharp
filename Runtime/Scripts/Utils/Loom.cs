@@ -15,6 +15,8 @@ namespace CraftSharp
         private const float MAX_FRAMETIME = 0.01F;
         public static int maxThreads = 8;
         private static int numThreads;
+        private static int sessionGeneration;
+        [ThreadStatic] private static int workerGeneration;
         private float _currentFrameStart = 0F;
 
         private static Loom _current;
@@ -32,6 +34,8 @@ namespace CraftSharp
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetForPlaySession()
         {
+            Interlocked.Increment(ref sessionGeneration);
+
             if (!_current)
                 _current = FindFirstObjectByType<Loom>(FindObjectsInactive.Include);
 
@@ -101,6 +105,9 @@ namespace CraftSharp
         
         public static void QueueOnMainThread(Action action, float time)
         {
+            if (workerGeneration != 0 && workerGeneration != Volatile.Read(ref sessionGeneration))
+                return;
+
             if (time != 0)
             {
                 if (Current)
@@ -125,6 +132,9 @@ namespace CraftSharp
 
         public static void QueueOnMainThreadMinor(Action action)
         {
+            if (workerGeneration != 0 && workerGeneration != Volatile.Read(ref sessionGeneration))
+                return;
+
             if (Current)
             {
                 lock (Current._minorActions)
@@ -142,7 +152,7 @@ namespace CraftSharp
                 Thread.Sleep(1);
             }
             Interlocked.Increment(ref numThreads);
-            ThreadPool.QueueUserWorkItem(RunAction, a);
+            ThreadPool.QueueUserWorkItem(RunAction, (a, Volatile.Read(ref sessionGeneration)));
             return null;
         }
 
@@ -150,7 +160,9 @@ namespace CraftSharp
         {
             try
             {
-                ((Action)action)();
+                var work = ((Action action, int generation)) action;
+                workerGeneration = work.generation;
+                work.action();
             }
             catch
             {
@@ -158,6 +170,7 @@ namespace CraftSharp
             }
             finally
             {
+                workerGeneration = 0;
                 Interlocked.Decrement(ref numThreads);
             }
 
