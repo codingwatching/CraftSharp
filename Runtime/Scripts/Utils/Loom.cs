@@ -29,9 +29,21 @@ namespace CraftSharp
 
         private static bool initialized;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetForPlaySession()
+        {
+            if (!_current)
+                _current = FindFirstObjectByType<Loom>(FindObjectsInactive.Include);
+
+            if (_current)
+                _current.ClearQueues();
+
+            initialized = _current;
+        }
+
         public static void Initialize()
         {
-            if (!initialized)
+            if (!initialized || !_current)
             {
                 if (!Application.isPlaying)
                     return;
@@ -68,6 +80,19 @@ namespace CraftSharp
         private readonly List<DelayedQueueItem> _delayed = new();
 
         private readonly List<DelayedQueueItem> _currentDelayed = new();
+
+        private void ClearQueues()
+        {
+            lock (_actions)
+                _actions.Clear();
+            lock (_minorActions)
+                _minorActions.Clear();
+            lock (_delayed)
+                _delayed.Clear();
+
+            _currentActions.Clear();
+            _currentDelayed.Clear();
+        }
 
         public static void QueueOnMainThread(Action action)
         {
@@ -142,8 +167,8 @@ namespace CraftSharp
         {
             if (_current == this)
             {
-
                 _current = null;
+                initialized = false;
             }
         }
 

@@ -422,7 +422,15 @@ namespace CraftSharp
 
             BiomesInitialized = false;
             DimensionTypesInitialized = false;
+            curDimensionType = new DimensionType();
+            curDimensionId = ResourceLocation.INVALID;
+            FoliageColormapPixels = Array.Empty<Color32>();
+            GrassColormapPixels = Array.Empty<Color32>();
+            ColormapSize = 0;
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetForPlaySession() => ClearWorldGenData();
 
         #endregion
 

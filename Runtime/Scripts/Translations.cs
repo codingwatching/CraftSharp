@@ -57,6 +57,8 @@ namespace CraftSharp
         /// </summary>
         public static void LoadTranslationsFile(string language)
         {
+            translations.Clear();
+
             string path = string.Empty, defaultTexts;
             try {
                 path = PathHelper.GetExtraDataFile($"app_lang{Path.DirectorySeparatorChar}{language}.lang");
